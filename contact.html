@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="p:domain_verify" content="3f9329f4428870c58c8b29e81cf2c699"/>
+  <title>Contact Us | Snowberry Belle</title>
+  <meta name="description" content="Contact Snowberry Belle for fashion curation questions, partnership inquiries, and website support.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Contact Us | Snowberry Belle">
+  <meta property="og:description" content="Reach Snowberry Belle by email or send a message through the contact form.">
+  <meta property="og:image" content="assets/pinky.jpeg">
+  <link rel="icon" type="image/png" href="assets/DUBRELLA.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Critical mobile-first CSS for fast first paint on Cloudflare edge -->
+  <style>
+    :root { --critical-bg: #fff6fa; --critical-text: #2d1f28; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--critical-bg); color: var(--critical-text); font-family: "Manrope", sans-serif; font-size: 16px; line-height: 1.5; }
+    .site-header { position: sticky; top: 0; z-index: 110; background: rgba(255, 246, 250, 0.96); border-bottom: 1px solid rgba(122, 74, 97, 0.14); }
+    .nav { min-height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  </style>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient-shape ambient-shape--one" aria-hidden="true"></div>
+  <div class="ambient-shape ambient-shape--two" aria-hidden="true"></div>
+
+  <!-- Sticky header for mobile-first navigation -->
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="index.html#home">Snowberry Belle</a>
+      <ul class="menu">
+        <li><a href="index.html#home">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="blog.html">Blog</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="index.html#categories">Categories</a></li>
+        <li><a href="contact.html" aria-current="page">Contact Us</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main content spacing tuned for 375-430px screens -->
+  <main class="contact-main">
+    <section class="contact-card reveal" id="contact">
+      <div class="contact-copy">
+        <p class="eyebrow">Contact Snowberry Belle</p>
+        <h1>Send Us A Note</h1>
+        <p>
+          For styling questions, partnership inquiries, or website support, use the form or email us directly at
+          <a href="mailto:Snowberry Bellefashion@gmail.com">Snowberry Bellefashion@gmail.com</a>.
+        </p>
+      </div>
+
+      <form class="contact-form" action="mailto:Snowberry Bellefashion@gmail.com" method="post" enctype="text/plain">
+        <label>
+          <span>Name</span>
+          <input type="text" name="name" autocomplete="name" required>
+        </label>
+
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+
+        <label>
+          <span>Subject</span>
+          <input type="text" name="subject" autocomplete="off" required>
+        </label>
+
+        <label>
+          <span>Message</span>
+          <textarea name="message" rows="6" required></textarea>
+        </label>
+
+        <button class="contact-submit" type="submit">Send Message</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- Compact footer with touch-safe utility links -->
+  <footer class="site-footer">
+    <div>
+      <strong>Snowberry Belle</strong><br>
+      <span>Curated feminine fashion for dreamy, modern wardrobes.</span><br>
+      <span class="footer-disclosure">This website is a participant in the Amazon Services LLC Associates Program. As an Amazon Associate, we earn from qualifying purchases at no additional cost to you.</span>
+    </div>
+    <div class="footer-links">
+      <a href="index.html#home">Home</a>
+      <a href="blog.html">Blog</a>
+      <a href="about.html">About Us</a>
+      <a href="index.html#categories">Categories</a>
+      <a href="contact.html">Contact Us</a>
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="affiliate-disclosure.html">Affiliate Disclosure</a>
+    </div>
+    <div>&copy; <span data-year></span> Snowberry Belle</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
