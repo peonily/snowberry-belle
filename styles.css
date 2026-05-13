@@ -1828,4 +1828,20 @@ body.nav-enhanced .menu {
     padding-inline: 0.45rem;
     font-size: 0.78rem;
   }
+
+  .hero {
+    width: min(var(--container-max), calc(100% - 1rem));
+  }
+
+  .hero-media-wrap {
+    aspect-ratio: 1376 / 768;
+    min-height: auto;
+  }
+
+  .hero-media {
+    position: static;
+    display: block;
+    height: auto;
+    object-fit: contain;
+  }
 }
