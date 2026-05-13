@@ -1830,7 +1830,7 @@ body.nav-enhanced .menu {
   }
 
   .hero {
-    width: min(var(--container-max), calc(100% - 1rem));
+    width: min(var(--container-max), calc(100% - 2.5rem));
   }
 
   .hero-media-wrap {
