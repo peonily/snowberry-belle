@@ -535,6 +535,7 @@ body.nav-enhanced .menu {
 
 .about-card p + p,
 .contact-copy p,
+.legal-card p + p,
 .blog-intro-copy,
 .product-summary,
 .product-disclosure,
@@ -1515,6 +1516,8 @@ body.nav-enhanced .menu {
 .blog-intro-copy,
 .blog-excerpt,
 .contact-copy p,
+.legal-card p,
+.legal-card li,
 .shop-hero__copy,
 .shop-note__copy,
 .shop-browser__copy,
@@ -1526,6 +1529,40 @@ body.nav-enhanced .menu {
 .product-data-note {
   color: #9f6f78;
   font-weight: 700;
+}
+
+.legal-card {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.legal-card h1 {
+  font-size: clamp(2rem, 6vw, 3.35rem);
+  line-height: 1.04;
+}
+
+.legal-card h2 {
+  margin-top: 0.35rem;
+  font-size: clamp(1.18rem, 3vw, 1.55rem);
+  line-height: 1.18;
+}
+
+.legal-card ul {
+  display: grid;
+  gap: 0.55rem;
+  padding-left: 1.25rem;
+}
+
+.legal-card a {
+  color: var(--accent);
+  font-weight: 800;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.legal-updated {
+  color: #c77d8c;
+  font-size: 0.9rem;
 }
 
 .blog-grid {
