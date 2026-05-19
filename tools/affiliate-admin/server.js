@@ -6,10 +6,10 @@ const { URL } = require("url");
 const ROOT_DIR = path.resolve(__dirname, "..", "..");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const SHOP_PATH = path.join(ROOT_DIR, "shop.html");
-const SITE_NAME = "Dubrella";
-const SITE_URL = String(process.env.SITE_URL || "https://dubrella.pages.dev").replace(/\/+$/, "");
+const SITE_NAME = "Snowberry Belle";
+const SITE_URL = String(process.env.SITE_URL || "https://snowberry-belle.pages.dev").replace(/\/+$/, "");
 const PORT = Number(process.env.PORT || 4311);
-const DOMAIN_VERIFY = "3f9329f4428870c58c8b29e81cf2c699";
+const DOMAIN_VERIFY = "c7bffbf5ae412683f3f84e7bb657c9b9";
 const AMAZON_PRICE_LABEL = "Check the latest price on Amazon";
 const AMAZON_VIEW_LABEL = "VIEW ON AMAZON";
 
@@ -22,11 +22,43 @@ const AMAZON_HEADERS = {
 };
 
 const SECTION_FALLBACKS = [
+  {
+    id: "clothing",
+    keywords: [
+      "cardigan",
+      "sweater",
+      "knit",
+      "pullover",
+      "jumper",
+      "vest",
+      "blouse",
+      "shirt",
+      "cami",
+      "camisole",
+      "tank",
+      "bodysuit",
+      "corset",
+      "top",
+      "jacket",
+      "coat",
+      "blazer",
+      "trench",
+      "skirt",
+      "trouser",
+      "trousers",
+      "pants",
+      "jeans",
+      "shorts",
+      "leggings",
+    ],
+  },
   { id: "dresses", keywords: ["dress", "mini dress", "midi dress", "maxi dress", "gown"] },
-  { id: "knits", keywords: ["cardigan", "sweater", "knit", "pullover", "jumper", "vest"] },
-  { id: "tops", keywords: ["blouse", "shirt", "cami", "camisole", "tank", "bodysuit", "corset", "top"] },
-  { id: "outer", keywords: ["jacket", "coat", "blazer", "trench", "puffer", "parka", "outerwear"] },
-  { id: "bottoms", keywords: ["skirt", "trouser", "trousers", "pants", "jeans", "shorts", "leggings"] },
+  { id: "gifts", keywords: ["gift", "birthday", "present", "set", "bundle", "plush", "cute", "kawaii"] },
+  { id: "decor", keywords: ["decor", "lamp", "pillow", "blanket", "bedding", "rug", "candle", "vase", "room"] },
+  {
+    id: "stationery",
+    keywords: ["stationery", "stationary", "notebook", "journal", "planner", "pen", "pencil", "sticker", "washi", "desk"],
+  },
   { id: "shoes", keywords: ["heels", "heel", "boots", "boot", "flats", "sandals", "sneakers", "loafers", "mules", "shoe"] },
   { id: "bags", keywords: ["bag", "purse", "tote", "crossbody", "shoulder bag", "clutch", "satchel"] },
 ];
@@ -305,7 +337,7 @@ function deriveSummary(bullets, shortTitle) {
   }
 
   return truncate(
-    `A feminine fashion pick built around ${shortTitle} with a soft silhouette and easy outfit potential.`,
+    `A soft Snowberry Belle pick built around ${shortTitle} with a sweet look and easy everyday styling potential.`,
     175,
   );
 }
@@ -316,11 +348,11 @@ function deriveCardCopy(bullets, shortTitle) {
     return truncate(toSentenceCase(candidate), 155);
   }
 
-  return truncate(`A polished ${shortTitle} pick for soft, modern wardrobes and repeatable everyday styling.`, 155);
+  return truncate(`A sweet ${shortTitle} pick for soft Snowberry Belle styling and everyday gifting ideas.`, 155);
 }
 
 function deriveMetaDescription(shortTitle, cardCopy) {
-  return truncate(`Shop ${shortTitle} on Dubrella. ${cardCopy}`, 158);
+  return truncate(`Shop ${shortTitle} on Snowberry Belle. ${cardCopy}`, 158);
 }
 
 function inferSectionId(productText, sectionIds) {
@@ -337,7 +369,7 @@ function inferSectionId(productText, sectionIds) {
     }
   }
 
-  return sectionIds[0] || "knits";
+  return sectionIds[0] || "clothing";
 }
 
 function extractAmazonPathInfo(urlString) {
@@ -722,7 +754,7 @@ ${renderProductMetaTags(data)}
 
   <header class="site-header">
     <nav class="nav container">
-      <a class="brand" href="index.html#home">DUBRELLA</a>
+      <a class="brand" href="index.html#home">Snowberry Belle</a>
       <ul class="menu">
         <li><a href="index.html#home">Home</a></li>
         <li><a href="shop.html">Shop</a></li>
@@ -752,7 +784,7 @@ ${gallery.media}
             <a class="product-back" href="shop.html#${escapeHtml(data.sectionId)}">Back to ${escapeHtml(data.sectionLabel)}</a>
           </div>
           <p class="product-disclosure">
-            Affiliate disclosure: As an Amazon Associate, Dubrella may earn from qualifying purchases.
+            Affiliate disclosure: As an Amazon Associate, Snowberry Belle may earn from qualifying purchases.
           </p>
           <p class="product-data-note">
             Product title${data.price ? ", price," : ""} and stock status were last verified on ${escapeHtml(data.publishedAt)}.
@@ -764,7 +796,7 @@ ${gallery.media}
 
   <footer class="site-footer">
     <div>
-      <strong>Dubrella</strong><br>
+      <strong>Snowberry Belle</strong><br>
       <span>Curated feminine fashion for dreamy, modern wardrobes.</span><br>
       <span class="footer-disclosure">Some links may earn us a commission.</span>
     </div>
@@ -775,7 +807,7 @@ ${gallery.media}
       <a href="about.html">About Us</a>
       <a href="index.html#categories">Categories</a>
     </div>
-    <div>&copy; <span data-year></span> Dubrella</div>
+    <div>&copy; <span data-year></span> Snowberry Belle</div>
   </footer>
 
   <script src="script.js"></script>${gallery.script}
