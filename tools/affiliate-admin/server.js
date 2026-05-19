@@ -12,6 +12,11 @@ const PORT = Number(process.env.PORT || 4311);
 const DOMAIN_VERIFY = "c7bffbf5ae412683f3f84e7bb657c9b9";
 const AMAZON_PRICE_LABEL = "Check the latest price on Amazon";
 const AMAZON_VIEW_LABEL = "VIEW ON AMAZON";
+const CORS_HEADERS = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET,POST,OPTIONS",
+  "access-control-allow-headers": "content-type",
+};
 
 const AMAZON_HEADERS = {
   "user-agent":
@@ -64,7 +69,7 @@ const SECTION_FALLBACKS = [
 ];
 
 function json(res, statusCode, payload) {
-  res.writeHead(statusCode, { "content-type": "application/json; charset=utf-8" });
+  res.writeHead(statusCode, { "content-type": "application/json; charset=utf-8", ...CORS_HEADERS });
   res.end(JSON.stringify(payload, null, 2));
 }
 
@@ -963,6 +968,12 @@ function createServer() {
   return http.createServer(async (req, res) => {
     try {
       const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+
+      if (req.method === "OPTIONS") {
+        res.writeHead(204, CORS_HEADERS);
+        res.end();
+        return;
+      }
 
       if (req.method === "GET" && requestUrl.pathname === "/api/sections") {
         json(res, 200, { sections: await getSections() });

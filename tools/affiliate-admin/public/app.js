@@ -19,15 +19,27 @@ const els = {
 };
 
 let lastAnalysis = null;
+const apiBaseUrl = window.location.protocol === "file:" ? "http://localhost:4311" : "";
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      "content-type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
+  const headers = { ...(options.headers || {}) };
+  if (options.body && !headers["content-type"]) {
+    headers["content-type"] = "application/json";
+  }
+
+  let response;
+  try {
+    response = await fetch(`${apiBaseUrl}${url}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    if (apiBaseUrl) {
+      throw new Error("Could not reach the affiliate admin server. Run npm run affiliate:app, then reload this page.");
+    }
+
+    throw error;
+  }
 
   const payload = await response.json();
   if (!response.ok) {
