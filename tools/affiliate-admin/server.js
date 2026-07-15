@@ -146,6 +146,13 @@ function cleanText(value) {
     .trim();
 }
 
+function cleanTitleText(value) {
+  return toAsciiText(decodeHtml(stripTags(value || "")))
+    .replace(/[\u3010\u3011]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function toSentenceCase(value) {
   if (!value) {
     return "";
@@ -304,7 +311,7 @@ function normalizeBrand(rawBrand, fullTitle) {
 }
 
 function titleFromAmazonTitle(fullTitle, brand) {
-  const normalized = cleanText(fullTitle).replace(/\s+/g, " ").trim();
+  const normalized = cleanTitleText(fullTitle).replace(/\s+/g, " ").trim();
   if (!brand) {
     return normalized;
   }
@@ -434,15 +441,26 @@ function extractMatch(html, regex) {
   return match ? cleanText(match[1]) : "";
 }
 
-function extractMetaContent(html, name) {
-  const escapedName = escapeRegExp(name);
-  const patterns = [
-    new RegExp(`<meta\\b(?=[^>]+(?:property|name)=["']${escapedName}["'])(?=[^>]+content=(["'])([\\s\\S]*?)\\1)[^>]*>`, "i"),
-  ];
+function extractTitleMatch(html, regex) {
+  const match = html.match(regex);
+  return match ? cleanTitleText(match[1]) : "";
+}
 
-  for (const pattern of patterns) {
-    const match = html.match(pattern);
-    const value = match ? cleanText(match[2]) : "";
+function extractAttributeValue(tag, name) {
+  const pattern = new RegExp(`\\b${escapeRegExp(name)}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, "i");
+  const match = String(tag || "").match(pattern);
+  return match ? decodeHtml(match[2]).trim() : "";
+}
+
+function extractMetaContent(html, name) {
+  for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const tag = match[0];
+    const property = extractAttributeValue(tag, "property") || extractAttributeValue(tag, "name");
+    if (property.toLowerCase() !== String(name).toLowerCase()) {
+      continue;
+    }
+
+    const value = cleanTitleText(extractAttributeValue(tag, "content"));
     if (value) {
       return value;
     }
@@ -451,11 +469,52 @@ function extractMetaContent(html, name) {
   return "";
 }
 
+function decodeJsonStringLiteral(value) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    return JSON.parse(`"${value}"`);
+  } catch {
+    return value
+      .replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+      .replace(/\\(["\\/bfnrt])/g, (_, char) => {
+        const escaped = { b: "\b", f: "\f", n: "\n", r: "\r", t: "\t" };
+        return escaped[char] || char;
+      });
+  }
+}
+
+function extractJsonTitleCandidates(html) {
+  const candidates = [];
+  const patterns = [
+    /"(?:productTitle|title|name|displayTitle)"\s*:\s*"((?:\\.|[^"\\])*)"/gi,
+    /"title"\s*:\s*\{[\s\S]{0,1000}?"displayString"\s*:\s*"((?:\\.|[^"\\])*)"/gi,
+    /"item_name"\s*:\s*"((?:\\.|[^"\\])*)"/gi,
+  ];
+
+  for (const pattern of patterns) {
+    for (const match of html.matchAll(pattern)) {
+      const title = cleanTitleText(decodeJsonStringLiteral(match[1]));
+      if (title) {
+        candidates.push(title);
+      }
+    }
+  }
+
+  return candidates;
+}
+
 function normalizeAmazonTitle(value) {
-  return cleanText(value)
+  return cleanTitleText(value)
     .replace(/^\s*Amazon(?:\.com)?\s*:\s*/i, "")
     .replace(/\s*:\s*Amazon(?:\.com)?\s*$/i, "")
     .replace(/\s*-\s*Amazon(?:\.com)?\s*$/i, "")
+    .replace(
+      /\s*:\s*(?:Clothing(?:,\s*Shoes\s*&\s*Jewelry)?|Shoes|Home(?:\s*&\s*Kitchen)?|Kitchen(?:\s*&\s*Dining)?|Electronics|Beauty(?:\s*&\s*Personal Care)?|Office Products|Sports(?:\s*&\s*Outdoors)?|Toys(?:\s*&\s*Games)?|Books|Amazon(?:\.com)?)\s*$/i,
+      "",
+    )
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -480,11 +539,13 @@ function isAmazonPathPlaceholderTitle(value, asin) {
 
 function extractAmazonTitle(html, pathInfo, input = {}) {
   const candidates = [
-    extractMatch(html, /<span\b(?=[^>]*\bid=["']productTitle["'])[^>]*>([\s\S]*?)<\/span>/i),
+    extractTitleMatch(html, /<span\b(?=[^>]*\bid=["']productTitle["'])[^>]*>([\s\S]*?)<\/span>/i),
+    extractTitleMatch(html, /<h1\b(?=[^>]*\bid=["']title["'])[^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>[\s\S]*?<\/h1>/i),
+    extractTitleMatch(html, /<div\b(?=[^>]*\bid=["']titleSection["'])[^>]*>([\s\S]*?)<\/div>/i),
     extractMetaContent(html, "og:title"),
     extractMetaContent(html, "twitter:title"),
-    extractMatch(html, /"title"\s*:\s*"([^"]{10,500})"/i),
-    extractMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i),
+    ...extractJsonTitleCandidates(html),
+    extractTitleMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i),
     titleFromSlugHint(pathInfo.slugHint),
   ];
 
