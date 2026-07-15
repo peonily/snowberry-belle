@@ -383,11 +383,16 @@ function extractAmazonPathInfo(urlString) {
   const dpIndex = parts.findIndex((part) => part.toLowerCase() === "dp");
   const gpIndex = parts.findIndex((part) => part.toLowerCase() === "product");
   const asin = dpIndex >= 0 ? parts[dpIndex + 1] : gpIndex >= 1 ? parts[gpIndex + 1] : "";
-  const slugHint = dpIndex > 0 ? parts.slice(0, dpIndex).join(" ") : parts.join(" ");
+  const slugParts =
+    dpIndex > 0
+      ? parts.slice(0, dpIndex)
+      : gpIndex > 1 && parts[gpIndex - 1]?.toLowerCase() === "gp"
+        ? parts.slice(0, gpIndex - 1)
+        : [];
 
   return {
     asin: cleanText(asin).toUpperCase(),
-    slugHint,
+    slugHint: slugParts.join(" "),
     canonicalUrl: `https://${url.hostname}/dp/${cleanText(asin).toUpperCase()}`,
   };
 }
@@ -432,12 +437,12 @@ function extractMatch(html, regex) {
 function extractMetaContent(html, name) {
   const escapedName = escapeRegExp(name);
   const patterns = [
-    new RegExp(`<meta[^>]+(?:property|name)=["']${escapedName}["'][^>]+content=["']([^"']+)["'][^>]*>`, "i"),
-    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${escapedName}["'][^>]*>`, "i"),
+    new RegExp(`<meta\\b(?=[^>]+(?:property|name)=["']${escapedName}["'])(?=[^>]+content=(["'])([\\s\\S]*?)\\1)[^>]*>`, "i"),
   ];
 
   for (const pattern of patterns) {
-    const value = extractMatch(html, pattern);
+    const match = html.match(pattern);
+    const value = match ? cleanText(match[2]) : "";
     if (value) {
       return value;
     }
@@ -459,6 +464,20 @@ function titleFromSlugHint(value) {
   return normalizeAmazonTitle(String(value ?? "").replace(/[-_]+/g, " "));
 }
 
+function isAmazonPathPlaceholderTitle(value, asin) {
+  const normalized = normalizeAmazonTitle(value).toLowerCase();
+  const cleanAsin = cleanText(asin).toLowerCase();
+
+  return (
+    !normalized ||
+    normalized === "dp" ||
+    normalized === cleanAsin ||
+    normalized === `dp ${cleanAsin}` ||
+    normalized === `product ${cleanAsin}` ||
+    normalized === `gp product ${cleanAsin}`
+  );
+}
+
 function extractAmazonTitle(html, pathInfo, input = {}) {
   const candidates = [
     extractMatch(html, /<span\b(?=[^>]*\bid=["']productTitle["'])[^>]*>([\s\S]*?)<\/span>/i),
@@ -466,13 +485,12 @@ function extractAmazonTitle(html, pathInfo, input = {}) {
     extractMetaContent(html, "twitter:title"),
     extractMatch(html, /"title"\s*:\s*"([^"]{10,500})"/i),
     extractMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i),
-    input.shortTitle,
     titleFromSlugHint(pathInfo.slugHint),
   ];
 
   for (const candidate of candidates) {
     const title = normalizeAmazonTitle(candidate);
-    if (title && !/^amazon(?:\.com)?$/i.test(title)) {
+    if (title && !/^amazon(?:\.com)?$/i.test(title) && !isAmazonPathPlaceholderTitle(title, pathInfo.asin)) {
       return title;
     }
   }
