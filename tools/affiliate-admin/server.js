@@ -399,6 +399,7 @@ function extractAmazonPathInfo(urlString) {
 
   return {
     asin: cleanText(asin).toUpperCase(),
+    hostname: url.hostname,
     slugHint: slugParts.join(" "),
     canonicalUrl: `https://${url.hostname}/dp/${cleanText(asin).toUpperCase()}`,
   };
@@ -424,16 +425,45 @@ async function resolveAffiliateUrl(affiliateUrl) {
   return response.url || affiliateUrl;
 }
 
-async function fetchAmazonHtml(canonicalUrl) {
-  const response = await fetch(canonicalUrl, {
-    headers: AMAZON_HEADERS,
-  });
+function isBlockedAmazonHtml(html) {
+  const title = cleanText(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "");
+  return (
+    /^amazon(?:\.com)?$/i.test(title) ||
+    /\/errors\/validateCaptcha|automated access to Amazon data|Sorry! Something went wrong!/i.test(html)
+  );
+}
 
-  if (!response.ok) {
-    throw new Error(`Amazon returned ${response.status} for ${canonicalUrl}`);
+function buildAmazonFetchUrls(pathInfo) {
+  const hostname = pathInfo.hostname || "www.amazon.com";
+  return [
+    pathInfo.canonicalUrl,
+    `https://${hostname}/-/dp/${pathInfo.asin}`,
+    `https://${hostname}/gp/aw/d/${pathInfo.asin}`,
+  ].filter(Boolean);
+}
+
+async function fetchAmazonHtml(pathInfo) {
+  const errors = [];
+
+  for (const url of buildAmazonFetchUrls(pathInfo)) {
+    const response = await fetch(url, {
+      headers: AMAZON_HEADERS,
+    });
+
+    if (!response.ok) {
+      errors.push(`${url} returned ${response.status}`);
+      continue;
+    }
+
+    const html = await response.text();
+    if (!isBlockedAmazonHtml(html)) {
+      return html;
+    }
+
+    errors.push(`${url} returned an Amazon bot-check or placeholder page`);
   }
 
-  return response.text();
+  throw new Error(`Could not read Amazon product HTML. ${errors.join("; ")}`);
 }
 
 function extractMatch(html, regex) {
@@ -509,6 +539,8 @@ function extractJsonTitleCandidates(html) {
 function normalizeAmazonTitle(value) {
   return cleanTitleText(value)
     .replace(/^\s*Amazon(?:\.com)?\s*:\s*/i, "")
+    .replace(/^\s*Amazon(?:\.com)?\s*\|\s*/i, "")
+    .replace(/\s*\|\s*(?:Clothing(?:,\s*Shoes\s*&\s*Jewelry)?|Shoes|Home(?:\s*&\s*Kitchen)?|Kitchen(?:\s*&\s*Dining)?|Electronics|Beauty(?:\s*&\s*Personal Care)?|Office Products|Sports(?:\s*&\s*Outdoors)?|Toys(?:\s*&\s*Games)?|Books|Amazon(?:\.com)?)\s*$/i, "")
     .replace(/\s*:\s*Amazon(?:\.com)?\s*$/i, "")
     .replace(/\s*-\s*Amazon(?:\.com)?\s*$/i, "")
     .replace(
@@ -1041,7 +1073,7 @@ async function analyzeAffiliateInput(input) {
     throw new Error("Could not extract an ASIN from the affiliate link.");
   }
 
-  const html = await fetchAmazonHtml(pathInfo.canonicalUrl);
+  const html = await fetchAmazonHtml(pathInfo);
   const analysis = createAnalysis(input, createAmazonData(pathInfo, html, input), sections);
   const pageFile = await findExistingProductFile(analysis);
 
