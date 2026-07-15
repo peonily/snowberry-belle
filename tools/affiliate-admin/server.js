@@ -300,7 +300,7 @@ function normalizeBrand(rawBrand, fullTitle) {
     return cleaned;
   }
 
-  return cleanText(fullTitle).split(/\s+/).slice(0, 2).join(" ");
+  return cleanText(fullTitle).split(/\s+/).slice(0, 1).join(" ");
 }
 
 function titleFromAmazonTitle(fullTitle, brand) {
@@ -427,6 +427,57 @@ async function fetchAmazonHtml(canonicalUrl) {
 function extractMatch(html, regex) {
   const match = html.match(regex);
   return match ? cleanText(match[1]) : "";
+}
+
+function extractMetaContent(html, name) {
+  const escapedName = escapeRegExp(name);
+  const patterns = [
+    new RegExp(`<meta[^>]+(?:property|name)=["']${escapedName}["'][^>]+content=["']([^"']+)["'][^>]*>`, "i"),
+    new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${escapedName}["'][^>]*>`, "i"),
+  ];
+
+  for (const pattern of patterns) {
+    const value = extractMatch(html, pattern);
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+function normalizeAmazonTitle(value) {
+  return cleanText(value)
+    .replace(/^\s*Amazon(?:\.com)?\s*:\s*/i, "")
+    .replace(/\s*:\s*Amazon(?:\.com)?\s*$/i, "")
+    .replace(/\s*-\s*Amazon(?:\.com)?\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function titleFromSlugHint(value) {
+  return normalizeAmazonTitle(String(value ?? "").replace(/[-_]+/g, " "));
+}
+
+function extractAmazonTitle(html, pathInfo, input = {}) {
+  const candidates = [
+    extractMatch(html, /<span\b(?=[^>]*\bid=["']productTitle["'])[^>]*>([\s\S]*?)<\/span>/i),
+    extractMetaContent(html, "og:title"),
+    extractMetaContent(html, "twitter:title"),
+    extractMatch(html, /"title"\s*:\s*"([^"]{10,500})"/i),
+    extractMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i),
+    input.shortTitle,
+    titleFromSlugHint(pathInfo.slugHint),
+  ];
+
+  for (const candidate of candidates) {
+    const title = normalizeAmazonTitle(candidate);
+    if (title && !/^amazon(?:\.com)?$/i.test(title)) {
+      return title;
+    }
+  }
+
+  return "";
 }
 
 function extractBullets(html) {
@@ -877,12 +928,14 @@ async function writeProductFiles(data) {
   return data.pageFile;
 }
 
-function createAmazonData(pathInfo, html) {
-  const fullTitle = extractMatch(html, /<span id="productTitle"[^>]*>([\s\S]*?)<\/span>/i);
-  const rawBrand = extractMatch(html, /<a id="bylineInfo"[^>]*>([\s\S]*?)<\/a>/i);
+function createAmazonData(pathInfo, html, input = {}) {
+  const fullTitle = extractAmazonTitle(html, pathInfo, input);
+  const rawBrand =
+    extractMatch(html, /<a\b(?=[^>]*\bid=["']bylineInfo["'])[^>]*>([\s\S]*?)<\/a>/i) ||
+    extractMatch(html, /<tr\b(?=[^>]*\bclass=["'][^"']*\bpo-brand\b)[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/i);
 
   if (!fullTitle) {
-    throw new Error("Could not read the Amazon product title.");
+    throw new Error("Could not read the Amazon product title. Add a Short title manually and try again.");
   }
 
   return {
@@ -910,7 +963,7 @@ async function analyzeAffiliateInput(input) {
   }
 
   const html = await fetchAmazonHtml(pathInfo.canonicalUrl);
-  const analysis = createAnalysis(input, createAmazonData(pathInfo, html), sections);
+  const analysis = createAnalysis(input, createAmazonData(pathInfo, html, input), sections);
   const pageFile = await findExistingProductFile(analysis);
 
   return {
